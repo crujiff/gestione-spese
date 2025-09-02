@@ -16,6 +16,12 @@
             padding: 0;
             box-sizing: border-box;
         }
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("Service Worker registrato"));
+}
+</script>
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
