@@ -1,95 +1,419 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gestione Spese - PWA</title>
-  <meta name="description" content="App per tracciare spese ed entrate - Offline PWA" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gestione Spese — Single File</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e88e5">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e88e5">
 
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icons/icon-192.png">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Material icons and simple CSS reset -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-  <link href="styles.css" rel="stylesheet">
-
-  <!-- Chart.js for charts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --accent:#1e88e5; --muted:#6b7280; --red:#d32f2f; --green:#059669;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#0b1220}
+  .app{max-width:1100px;margin:18px auto;padding:14px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  header h1{margin:0;color:var(--accent);font-size:20px}
+  .btn{background:var(--card);border:1px solid #e6eefc;padding:8px 10px;border-radius:10px;cursor:pointer}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),#60a5fa);color:white;border:0}
+  .layout{display:grid;grid-template-columns:300px 1fr;gap:12px;margin-top:12px}
+  /* left column */
+  .left-col{display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+  .totals{display:flex;flex-direction:column;gap:8px}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fbfeff}
+  .stat .label{color:var(--muted);font-size:13px}
+  .stat .value{font-weight:700}
+  .list{max-height:56vh;overflow:auto;margin-top:8px}
+  .entry{display:flex;justify-content:space-between;gap:8px;padding:8px;border-radius:8px;border:1px solid #eef3ff;background:white;margin-bottom:8px;align-items:center}
+  .entry .left{display:flex;flex-direction:column}
+  .entry .cat{font-size:13px;padding:4px 8px;border-radius:999px;background:#f2f8ff;color:var(--accent);display:inline-block}
+  .entry .meta{font-size:12px;color:var(--muted);margin-top:6px}
+  .entry .amount{font-weight:700}
+  .actions{display:flex;flex-direction:column;gap:6px}
+  .actions .small{padding:6px 8px;border-radius:8px}
+  /* right column */
+  .center-col{display:flex;flex-direction:column;gap:12px}
+  .insert-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+  .insert-row .field{display:flex;flex-direction:column;gap:6px}
+  input[type="text"], input[type="number"], input[type="date"], select {padding:8px;border-radius:8px;border:1px solid #e6eefc;background:#fbfdff}
+  .chart-area{display:flex;gap:12px;align-items:flex-start}
+  .pie-wrap{flex:1;min-width:320px;height:420px;background:var(--card);padding:12px;border-radius:12px}
+  .legend{width:280px;background:var(--card);padding:12px;border-radius:12px;max-height:360px;overflow:auto}
+  .legend-item{display:flex;gap:8px;align-items:center;padding:6px;border-radius:8px}
+  .legend-color{width:18px;height:14px;border-radius:4px}
+  footer{display:flex;justify-content:flex-end;margin-top:12px;gap:8px}
+  .muted{color:var(--muted);font-size:13px}
+  @media (max-width:980px){ .layout{grid-template-columns:1fr} .legend{width:100%} .pie-wrap{height:360px} }
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>Gestione Spese</h1>
-    <div class="header-actions">
-      <button id="btn-set-budget" class="btn">Imposta budget</button>
-      <button id="btn-export" class="btn">Esporta CSV</button>
-      <button id="btn-clear-filters" class="btn">Reset filtri</button>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="budget-card">
+  <div class="app" role="application" aria-labelledby="appTitle">
+    <header>
+      <h1 id="appTitle">💼 Gestione Spese</h1>
       <div>
-        <strong>Budget mensile</strong>
-        <div id="budget-text">Nessun budget impostato</div>
+        <button id="btnExportAll" class="btn">Esporta CSV</button>
       </div>
-      <div class="budget-bar-wrap">
-        <div id="budget-bar" class="budget-bar"></div>
-      </div>
-    </section>
+    </header>
 
-    <section class="controls">
-      <div class="left">
-        <button id="btn-add" class="btn primary">+ Aggiungi</button>
-      </div>
-      <div class="right">
-        <label>Da <input type="date" id="filter-from"></label>
-        <label>A <input type="date" id="filter-to"></label>
-        <select id="filter-category" multiple size="1"></select>
-      </div>
-    </section>
-
-    <section class="charts">
-      <h2>Andamento mensile</h2>
-      <canvas id="barChart" height="120"></canvas>
-      <h2>Ripartizione per categoria</h2>
-      <canvas id="pieChart" height="120"></canvas>
-    </section>
-
-    <section>
-      <h2>Movimenti</h2>
-      <ul id="entries-list" class="entries-list"></ul>
-      <div id="empty" class="empty">Nessun movimento</div>
-    </section>
-  </main>
-
-  <!-- Modale Aggiungi/Modifica -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-content">
-      <h3 id="modal-title">Nuovo movimento</h3>
-      <form id="entry-form">
-        <div class="segmented">
-          <label><input type="radio" name="type" value="expense" checked> Spesa</label>
-          <label><input type="radio" name="type" value="income"> Entrata</label>
+    <div style="margin-top:12px" class="card">
+      <!-- central top: insert entry (1) -->
+      <form id="addForm" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap" autocomplete="off">
+        <div class="field">
+          <label class="muted">Tipo</label>
+          <select id="type" required>
+            <option value="expense">Uscita</option>
+            <option value="income">Entrata</option>
+          </select>
         </div>
-        <label>Valore (EUR)<input type="number" step="0.01" id="amount" required></label>
-        <label>Data<input type="date" id="date" required></label>
-        <label>Categoria<select id="category"></select></label>
-        <label>Nota<input type="text" id="note"></label>
-        <div class="modal-actions">
-          <button type="button" id="btn-cancel" class="btn">Annulla</button>
-          <button type="submit" class="btn primary">Salva</button>
+        <div class="field">
+          <label class="muted">Categoria</label>
+          <select id="category" required></select>
+        </div>
+        <div class="field">
+          <label class="muted">Importo (€)</label>
+          <input id="amount" type="number" step="0.01" min="0.01" required />
+        </div>
+        <div class="field">
+          <label class="muted">Data</label>
+          <input id="date" type="date" required />
+        </div>
+        <div class="field" style="flex:1;min-width:160px">
+          <label class="muted">Nota (opzionale)</label>
+          <input id="note" type="text" />
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="submit" class="btn primary">Aggiungi</button>
+          <button type="button" id="clearForm" class="btn">Pulisci</button>
         </div>
       </form>
     </div>
+
+    <div class="layout">
+      <!-- LEFT: totals + list -->
+      <div class="left-col">
+        <div class="card totals">
+          <!-- (2) Totali filtrati per data -->
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <div>
+              <div class="muted">Filtro periodo</div>
+              <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+                <input id="filterFrom" type="date" /> <span class="muted">→</span> <input id="filterTo" type="date" />
+                <button id="applyFilter" class="btn">Applica</button>
+                <button id="resetFilter" class="btn">Reset</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="stat">
+              <div class="label">Entrate</div><div class="value" id="totalIncome">€0.00</div>
+            </div>
+            <div class="stat" style="margin-top:8px">
+              <div class="label">Uscite</div><div class="value" id="totalExpense">€0.00</div>
+            </div>
+            <div class="stat" style="margin-top:8px">
+              <div class="label">Saldo</div><div class="value" id="balance">€0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- (4) Lista movimenti (a sinistra del grafico) -->
+        <div class="card list" style="flex:1">
+          <strong>Movimenti (filtro corrente)</strong>
+          <div id="entries" style="margin-top:10px"></div>
+        </div>
+
+      </div>
+
+      <!-- CENTER: pie chart + legend -->
+      <div class="center-col">
+        <div class="card chart-area" style="padding:12px">
+          <!-- (3) Grafico a torta con drill-down (click on slice) -->
+          <div class="pie-wrap">
+            <canvas id="pieChart" style="width:100%;height:100%"></canvas>
+          </div>
+
+          <!-- legend / drill-down info -->
+          <div class="legend" id="legendBox">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <strong>Categorie</strong>
+              <div>
+                <button id="clearDrill" class="btn">Togli filtro categoria</button>
+              </div>
+            </div>
+            <div id="legendItems"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px">
+          <div class="muted">Clicca su una fetta per filtrare la lista per categoria (drill-down)</div>
+          <div><button id="exportFiltered" class="btn">Esporta filtrati (CSV)</button></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="muted" style="margin-right:10px">Dati salvati localmente nel browser</div>
+    </footer>
   </div>
 
-  <script src="app.js"></script>
+<script>
+/* Single-file expense app
+   - localStorage persistence
+   - add/edit/delete entries
+   - date-range filter -> affects totals, pie, list
+   - pie shows incomes (green) and expenses (red) by category, click slice = drill-down
+   - export CSV (all filtered)
+*/
 
-  <script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').catch(e => console.log('SW reg failed', e));
+(() => {
+  // categories
+  const expenseCategories = ['Cibo','Affitto','Trasporti','Utenze','Intrattenimento','Salute','Shopping','Istruzione','Viaggi','Altro'];
+  const incomeCategories = ['Stipendio','Freelance','Regali','Investimenti','Altro'];
+
+  // DOM
+  const el = id => document.getElementById(id);
+  const form = document.getElementById('addForm');
+  const typeEl = el('type'), catEl = el('category'), amountEl = el('amount'), dateEl = el('date'), noteEl = el('note');
+  const clearFormBtn = el('clearForm');
+  const entriesDiv = el('entries');
+  const totalIncomeEl = el('totalIncome'), totalExpenseEl = el('totalExpense'), balanceEl = el('balance');
+  const filterFrom = el('filterFrom'), filterTo = el('filterTo'), applyFilter = el('applyFilter'), resetFilter = el('resetFilter');
+  const exportFilteredBtn = el('exportFiltered'), exportAllBtn = el('btnExportAll');
+  const legendItems = el('legendItems'), clearDrill = el('clearDrill');
+
+  const pieCanvas = document.getElementById('pieChart');
+  let pieChart = null;
+  let drillCategory = null; // current drill-down category
+
+  // storage
+  const KEY = 'expense_single_app_v1';
+  let state = { entries: [] };
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if(s && Array.isArray(s.entries)) state = s; } catch(e){ state = {entries:[]} }
+
+  // helpers
+  const uid = () => 'id_'+Math.random().toString(36).slice(2,9);
+  const saveState = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const fmt = n => '€'+Number(n||0).toFixed(2);
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const parseDate = d => new Date(d+'T00:00:00');
+
+  // populate category select based on type
+  function populateCategories(){
+    catEl.innerHTML = '';
+    const list = typeEl.value === 'expense' ? expenseCategories : incomeCategories;
+    list.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; catEl.appendChild(o);});
+  }
+  typeEl.addEventListener('change', populateCategories);
+  populateCategories();
+  dateEl.value = todayISO();
+
+  // add entry
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const type = typeEl.value;
+    const category = catEl.value;
+    const amount = parseFloat(amountEl.value);
+    const date = dateEl.value;
+    const note = noteEl.value.trim();
+    if(!category || !date || !(amount>0)) { alert('Compila tipo, categoria, data e importo valido'); return; }
+    const e = { id: uid(), type, category, amount: Number(amount.toFixed(2)), date, note };
+    state.entries.push(e);
+    saveState();
+    form.reset(); populateCategories(); dateEl.value = todayISO();
+    renderAll();
+  });
+
+  clearFormBtn.addEventListener('click', ()=>{ form.reset(); populateCategories(); dateEl.value = todayISO(); });
+
+  // filtering
+  function getFilteredEntries(){
+    let list = state.entries.slice();
+    // date range
+    if(filterFrom.value) {
+      const f = parseDate(filterFrom.value);
+      list = list.filter(e => parseDate(e.date) >= f);
     }
-  </script>
+    if(filterTo.value) {
+      const t = parseDate(filterTo.value); t.setDate(t.getDate()+1); // include day
+      list = list.filter(e => parseDate(e.date) < t);
+    }
+    // drill-down category
+    if(drillCategory) list = list.filter(e => e.category === drillCategory);
+    // sort newest first
+    list.sort((a,b) => new Date(b.date) - new Date(a.date));
+    return list;
+  }
+
+  applyFilter.addEventListener('click', renderAll);
+  resetFilter.addEventListener('click', ()=>{ filterFrom.value=''; filterTo.value=''; drillCategory=null; renderAll(); });
+
+  // list render (left of pie): (4)
+  function renderList(){
+    const list = getFilteredEntries();
+    entriesDiv.innerHTML = '';
+    if(list.length === 0){ entriesDiv.innerHTML = '<div class="muted">Nessun movimento</div>'; return; }
+    list.forEach(item => {
+      const div = document.createElement('div'); div.className = 'entry';
+      const left = document.createElement('div'); left.className = 'left';
+      left.innerHTML = `<div><span class="cat">${escapeHtml(item.category)}</span> <span class="amount" style="color:${item.type==='expense'? 'var(--red)':'var(--green)'}">${item.type==='expense'?'- ':'+ '}${fmt(item.amount)}</span></div><div class="meta">${new Date(item.date).toLocaleDateString('it-IT')} ${item.note? ' • '+escapeHtml(item.note):''}</div>`;
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const btnEdit = document.createElement('button'); btnEdit.className='btn small'; btnEdit.textContent='Modifica';
+      const btnDel = document.createElement('button'); btnDel.className='btn small'; btnDel.textContent='Elimina';
+      btnEdit.onclick = ()=> openEdit(item.id);
+      btnDel.onclick = ()=> { if(confirm('Eliminare il movimento?')) { state.entries = state.entries.filter(x=>x.id!==item.id); saveState(); renderAll(); } };
+      actions.appendChild(btnEdit); actions.appendChild(btnDel);
+      div.appendChild(left); div.appendChild(actions);
+      entriesDiv.appendChild(div);
+    });
+  }
+
+  // edit
+  function openEdit(id){
+    const e = state.entries.find(x=>x.id===id); if(!e) return;
+    typeEl.value = e.type; populateCategories(); catEl.value = e.category; amountEl.value = e.amount; dateEl.value = e.date; noteEl.value = e.note || '';
+    // remove original and save as new on submit
+    state.entries = state.entries.filter(x=>x.id!==id);
+    saveState();
+  }
+
+  // totals (2)
+  function renderTotals(){
+    const list = getFilteredEntries();
+    const income = list.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+    const expense = list.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+    totalIncomeEl.textContent = fmt(income);
+    totalExpenseEl.textContent = fmt(expense);
+    balanceEl.textContent = fmt(income - expense);
+  }
+
+  // pie chart (3) with drill-down (5)
+  function renderPie(){
+    const list = getFilteredEntries();
+    // group by (type + category) so incomes and expenses same category are distinct
+    const map = {};
+    list.forEach(e => {
+      const key = `${e.type}:::${e.category}`;
+      map[key] = (map[key]||0) + e.amount;
+    });
+    const labels = Object.keys(map).map(k => { const [t,cat] = k.split(':::'); return `${t==='income'?'Entrata':'Uscita'} — ${cat}`; });
+    const data = Object.keys(map).map(k => map[k]);
+    const bg = Object.keys(map).map(k => k.startsWith('income') ? '#4CAF50' : '#FF6B6B');
+
+    // if no data, destroy chart
+    if(labels.length === 0){
+      if(pieChart){ pieChart.destroy(); pieChart = null; }
+      legendItems.innerHTML = '<div class="muted">Nessuna spesa/entrata per il periodo selezionato.</div>';
+      return;
+    }
+
+    if(pieChart) pieChart.destroy();
+    pieChart = new Chart(pieCanvas, {
+      type: 'pie',
+      data: { labels, datasets: [{ data, backgroundColor: bg }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: {
+            label: ctx => {
+              const v = ctx.dataset.data[ctx.dataIndex];
+              const label = ctx.label || '';
+              return `${label}: ${fmt(v)}`;
+            }
+          } }
+        },
+        onClick(evt, elements) {
+          if(elements.length === 0) return;
+          const idx = elements[0].index;
+          const label = labels[idx]; // format "Entrata — Categoria" or "Uscita — Categoria"
+          const parts = label.split(' — ');
+          const typ = parts[0].startsWith('Entrata') ? 'income' : 'expense';
+          const cat = parts[1];
+          // set drillCategory to cat and re-render
+          if(drillCategory === cat && getCurrentDrillType() === typ) { drillCategory = null; } else { drillCategory = cat; setDrillType(typ); }
+          renderAll();
+        }
+      }
+    });
+
+    // legend items
+    legendItems.innerHTML = labels.map((lab, i) => {
+      const val = data[i];
+      return `<div class="legend-item"><div class="legend-color" style="background:${bg[i]}"></div><div>${escapeHtml(lab)}</div><div style="margin-left:auto;font-weight:700">${fmt(val)}</div></div>`;
+    }).join('');
+  }
+
+  // helper to store which type the drill applies to (income/expense)
+  function setDrillType(t){
+    sessionStorage.setItem('drillType', t);
+  }
+  function getCurrentDrillType(){ return sessionStorage.getItem('drillType') || null; }
+
+  // export filtered (6)
+  function exportCSV(list){
+    if(!list || list.length===0){ alert('Nessun dato da esportare (controlla i filtri).'); return; }
+    const rows = [['id','date','type','amount','category','note']];
+    list.forEach(r => rows.push([r.id, r.date, r.type, r.amount, r.category, (r.note||'').replace(/\n/g,' ')]));
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `export_${(new Date()).toISOString().slice(0,19).replace(/[:T]/g,'_')}.csv`; a.click(); URL.revokeObjectURL(url);
+  }
+
+  exportFilteredBtn.addEventListener('click', ()=> exportCSV(getFilteredEntries()));
+  exportAllBtn.addEventListener('click', ()=> exportCSV(state.entries));
+
+  // legend clear drill
+  clearDrill.addEventListener('click', ()=> { drillCategory = null; sessionStorage.removeItem('drillType'); renderAll(); });
+
+  // utilities
+  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // main render
+  function renderAll(){
+    populateCategories();
+    renderList();
+    renderTotals();
+    renderPie();
+  }
+
+  function renderList(){
+    const list = getFilteredEntries();
+    entriesDiv.innerHTML = '';
+    if(list.length === 0){ entriesDiv.innerHTML = '<div class="muted">Nessun movimento per i filtri selezionati.</div>'; return; }
+    list.forEach(e => {
+      // only show if matches drill type when drillCategory set? We already filter by category and date.
+      const d = document.createElement('div'); d.className = 'entry';
+      d.innerHTML = `<div class="left"><div><span class="cat">${escapeHtml(e.category)}</span> <span class="amount" style="color:${e.type==='expense' ? 'var(--red)' : 'var(--green)'}">${e.type==='expense' ? '- ':'+ '}${fmt(e.amount)}</span></div><div class="meta">${new Date(e.date).toLocaleDateString('it-IT')} ${e.note ? ' • '+escapeHtml(e.note) : ''}</div></div><div class="actions"><button class="btn small" onclick="(function(){window._app_open_edit&&window._app_open_edit('${e.id}')})()">Modifica</button><button class="btn small" onclick="(function(){window._app_delete&&window._app_delete('${e.id}')})()">Elimina</button></div>`;
+      entriesDiv.appendChild(d);
+    });
+  }
+
+  // expose edit/delete to inline onclicks
+  window._app_delete = id => { if(confirm('Eliminare?')){ state.entries = state.entries.filter(x=>x.id!==id); saveState(); renderAll(); } };
+  window._app_open_edit = id => {
+    const ent = state.entries.find(x=>x.id===id); if(!ent) return;
+    // fill form with values and remove original entry (we will re-add on submit)
+    typeEl.value = ent.type; populateCategories(); catEl.value = ent.category; amountEl.value = ent.amount; dateEl.value = ent.date; noteEl.value = ent.note||'';
+    // remove original entry immediately (so save will update)
+    state.entries = state.entries.filter(x=>x.id!==id); saveState(); renderAll();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // initial render
+  renderAll();
+
+  // UX: auto-save when closing page already done via add/edit flows; data persisted in localStorage after each op
+})();
+</script>
 </body>
 </html>
