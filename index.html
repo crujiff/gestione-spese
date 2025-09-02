@@ -1,828 +1,95 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-	<link rel="manifest" href="manifest.json">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Gestione Spese">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik05NiA0OEMxMjYuOTI4IDQ4IDE1MiA3My4wNzIxIDE1MiAxMDRDMTUyIDEzNC45MjggMTI2LjkyOCAxNjAgOTYgMTYwQzY1LjA3MjEgMTYwIDQwIDEzNC45MjggNDAgMTA0QzQwIDczLjA3MjEgNjUuMDcyMSA0OCA5NiA0OFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik04OCA4MEg5NlY5Nkg4OFY4MFoiIGZpbGw9IiM2NjdlZWEiLz4KPHA+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MF9saW5lYXJfMV8xIiB4MT0iMCIgeTE9IjAiIHgyPSIxOTIiIHkyPSIxOTIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzY2N2VlYSIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3NjRiYTIiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4=">
-    <title>💰 Gestione Spese</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker registrato"));
-}
-</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gestione Spese - PWA</title>
+  <meta name="description" content="App per tracciare spese ed entrate - Offline PWA" />
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192.png">
 
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            min-height: 100vh;
-            position: relative;
-        }
+  <!-- Material icons and simple CSS reset -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .budget-display {
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .budget-bar {
-            background: rgba(255,255,255,0.3);
-            height: 8px;
-            border-radius: 4px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        .budget-progress {
-            height: 100%;
-            background: #4CAF50;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-        }
-
-        .budget-progress.warning {
-            background: #FF9800;
-        }
-
-        .budget-progress.danger {
-            background: #F44336;
-        }
-
-        .nav-tabs {
-            display: flex;
-            background: #f5f5f5;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .nav-tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            color: #666;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tab.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-
-        .btn-primary:active {
-            transform: translateY(1px);
-        }
-
-        .btn-secondary {
-            padding: 8px 16px;
-            background: #f5f5f5;
-            color: #666;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 5px;
-        }
-
-        .filters {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .filters-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .filters-row input, .filters-row select {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-
-        .expense-item {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .expense-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .expense-amount {
-            font-size: 18px;
-            font-weight: 600;
-            color: #e74c3c;
-        }
-
-        .expense-date {
-            font-size: 12px;
-            color: #888;
-        }
-
-        .expense-category {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .expense-description {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .delete-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 8px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #888;
-            font-size: 12px;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .no-data {
-            text-align: center;
-            color: #888;
-            padding: 40px 20px;
-        }
-
-        .budget-setup {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-
-        .alert.warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-
-        .alert.danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .category-colors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .category-legend {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .category-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
+  <!-- Chart.js for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>💰 Gestione Spese</h1>
-            <div class="budget-display">
-                <div id="budgetText">Budget mensile: €<span id="budgetAmount">1000</span></div>
-                <div>Speso: €<span id="spentAmount">0</span></div>
-                <div class="budget-bar">
-                    <div class="budget-progress" id="budgetProgress"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('add')">➕ Aggiungi</button>
-            <button class="nav-tab" onclick="switchTab('list')">📋 Lista</button>
-            <button class="nav-tab" onclick="switchTab('stats')">📊 Statistiche</button>
-            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Impostazioni</button>
-        </div>
-
-        <!-- TAB AGGIUNGI SPESA -->
-        <div id="add-tab" class="tab-content active">
-            <div id="budgetAlert"></div>
-            <form id="expenseForm">
-                <div class="form-group">
-                    <label for="amount">Importo * (€)</label>
-                    <input type="number" id="amount" step="0.01" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="date">Data *</label>
-                    <input type="date" id="date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category">Categoria</label>
-                    <select id="category">
-                        <option value="">Seleziona categoria</option>
-                        <option value="Cibo">🍕 Cibo</option>
-                        <option value="Trasporti">🚗 Trasporti</option>
-                        <option value="Shopping">🛍️ Shopping</option>
-                        <option value="Casa">🏠 Casa</option>
-                        <option value="Salute">⚕️ Salute</option>
-                        <option value="Svago">🎮 Svago</option>
-                        <option value="Altro">📦 Altro</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Descrizione</label>
-                    <textarea id="description" rows="3" placeholder="Descrizione opzionale..."></textarea>
-                </div>
-                
-                <button type="submit" class="btn-primary">Aggiungi Spesa</button>
-            </form>
-        </div>
-
-        <!-- TAB LISTA -->
-        <div id="list-tab" class="tab-content">
-            <div class="filters">
-                <div class="filters-row">
-                    <input type="date" id="filterDateFrom" placeholder="Da">
-                    <input type="date" id="filterDateTo" placeholder="A">
-                </div>
-                <div class="filters-row">
-                    <select id="filterCategory">
-                        <option value="">Tutte le categorie</option>
-                        <option value="Cibo">🍕 Cibo</option>
-                        <option value="Trasporti">🚗 Trasporti</option>
-                        <option value="Shopping">🛍️ Shopping</option>
-                        <option value="Casa">🏠 Casa</option>
-                        <option value="Salute">⚕️ Salute</option>
-                        <option value="Svago">🎮 Svago</option>
-                        <option value="Altro">📦 Altro</option>
-                    </select>
-                    <button onclick="clearFilters()" class="btn-secondary">Reset</button>
-                </div>
-                <button onclick="exportToCSV()" class="btn-secondary">📥 Esporta CSV</button>
-            </div>
-            
-            <div id="expensesList"></div>
-        </div>
-
-        <!-- TAB STATISTICHE -->
-        <div id="stats-tab" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalExpenses">€0</div>
-                    <div class="stat-label">Totale Spese</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="monthlyExpenses">€0</div>
-                    <div class="stat-label">Questo Mese</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="avgDaily">€0</div>
-                    <div class="stat-label">Media Giornaliera</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="expenseCount">0</div>
-                    <div class="stat-label">Numero Spese</div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h3>Spese per Categoria</h3>
-                <canvas id="categoryChart" width="300" height="300"></canvas>
-                <div class="category-colors" id="categoryLegend"></div>
-            </div>
-        </div>
-
-        <!-- TAB IMPOSTAZIONI -->
-        <div id="settings-tab" class="tab-content">
-            <div class="budget-setup">
-                <h3>Budget Mensile</h3>
-                <div class="form-group">
-                    <label for="monthlyBudget">Importo Budget (€)</label>
-                    <input type="number" id="monthlyBudget" step="0.01" min="0" value="1000">
-                </div>
-                <button onclick="updateBudget()" class="btn-primary">Aggiorna Budget</button>
-            </div>
-
-            <div class="form-group">
-                <button onclick="clearAllData()" class="btn-secondary" style="background: #e74c3c; color: white;">🗑️ Cancella Tutti i Dati</button>
-            </div>
-        </div>
+  <header class="app-header">
+    <h1>Gestione Spese</h1>
+    <div class="header-actions">
+      <button id="btn-set-budget" class="btn">Imposta budget</button>
+      <button id="btn-export" class="btn">Esporta CSV</button>
+      <button id="btn-clear-filters" class="btn">Reset filtri</button>
     </div>
+  </header>
 
-    <script>
-        // Dati dell'applicazione
-        let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-        let monthlyBudget = parseFloat(localStorage.getItem('monthlyBudget') || '1000');
-        
-        // Colori per le categorie
-        const categoryColors = {
-            'Cibo': '#FF6B6B',
-            'Trasporti': '#4ECDC4', 
-            'Shopping': '#45B7D1',
-            'Casa': '#96CEB4',
-            'Salute': '#FFEAA7',
-            'Svago': '#DDA0DD',
-            'Altro': '#98D8C8'
-        };
+  <main class="container">
+    <section class="budget-card">
+      <div>
+        <strong>Budget mensile</strong>
+        <div id="budget-text">Nessun budget impostato</div>
+      </div>
+      <div class="budget-bar-wrap">
+        <div id="budget-bar" class="budget-bar"></div>
+      </div>
+    </section>
 
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('date').valueAsDate = new Date();
-            document.getElementById('monthlyBudget').value = monthlyBudget;
-            updateBudgetDisplay();
-            updateExpensesList();
-            updateStats();
-        });
+    <section class="controls">
+      <div class="left">
+        <button id="btn-add" class="btn primary">+ Aggiungi</button>
+      </div>
+      <div class="right">
+        <label>Da <input type="date" id="filter-from"></label>
+        <label>A <input type="date" id="filter-to"></label>
+        <select id="filter-category" multiple size="1"></select>
+      </div>
+    </section>
 
-        // Gestione form spese
-        document.getElementById('expenseForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const expense = {
-                id: Date.now(),
-                amount: parseFloat(document.getElementById('amount').value),
-                date: document.getElementById('date').value,
-                category: document.getElementById('category').value || 'Altro',
-                description: document.getElementById('description').value.trim()
-            };
-            
-            expenses.push(expense);
-            localStorage.setItem('expenses', JSON.stringify(expenses));
-            
-            // Reset form
-            document.getElementById('expenseForm').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            
-            // Aggiorna visualizzazioni
-            updateBudgetDisplay();
-            updateExpensesList();
-            updateStats();
-            
-            // Mostra messaggio di successo
-            alert('💰 Spesa aggiunta con successo!');
-        });
+    <section class="charts">
+      <h2>Andamento mensile</h2>
+      <canvas id="barChart" height="120"></canvas>
+      <h2>Ripartizione per categoria</h2>
+      <canvas id="pieChart" height="120"></canvas>
+    </section>
 
-        // Cambio tab
-        function switchTab(tabName) {
-            // Nascondi tutti i tab
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostra tab selezionato
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
-            
-            if (tabName === 'stats') {
-                setTimeout(updateChart, 100);
-            }
-        }
+    <section>
+      <h2>Movimenti</h2>
+      <ul id="entries-list" class="entries-list"></ul>
+      <div id="empty" class="empty">Nessun movimento</div>
+    </section>
+  </main>
 
-        // Aggiorna display budget
-        function updateBudgetDisplay() {
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            const monthlyExpenses = expenses
-                .filter(e => e.date.startsWith(currentMonth))
-                .reduce((sum, e) => sum + e.amount, 0);
-            
-            document.getElementById('budgetAmount').textContent = monthlyBudget.toFixed(2);
-            document.getElementById('spentAmount').textContent = monthlyExpenses.toFixed(2);
-            
-            const percentage = (monthlyExpenses / monthlyBudget) * 100;
-            const progressBar = document.getElementById('budgetProgress');
-            
-            progressBar.style.width = Math.min(percentage, 100) + '%';
-            progressBar.className = 'budget-progress';
-            
-            if (percentage >= 100) {
-                progressBar.classList.add('danger');
-            } else if (percentage >= 80) {
-                progressBar.classList.add('warning');
-            }
-            
-            // Alert budget
-            const alertDiv = document.getElementById('budgetAlert');
-            if (percentage >= 100) {
-                alertDiv.innerHTML = '<div class="alert danger">⚠️ Budget superato! Hai speso €' + (monthlyExpenses - monthlyBudget).toFixed(2) + ' in più.</div>';
-            } else if (percentage >= 80) {
-                alertDiv.innerHTML = '<div class="alert warning">⚠️ Attenzione: hai utilizzato ' + percentage.toFixed(1) + '% del budget mensile.</div>';
-            } else {
-                alertDiv.innerHTML = '';
-            }
-        }
+  <!-- Modale Aggiungi/Modifica -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modal-title">Nuovo movimento</h3>
+      <form id="entry-form">
+        <div class="segmented">
+          <label><input type="radio" name="type" value="expense" checked> Spesa</label>
+          <label><input type="radio" name="type" value="income"> Entrata</label>
+        </div>
+        <label>Valore (EUR)<input type="number" step="0.01" id="amount" required></label>
+        <label>Data<input type="date" id="date" required></label>
+        <label>Categoria<select id="category"></select></label>
+        <label>Nota<input type="text" id="note"></label>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel" class="btn">Annulla</button>
+          <button type="submit" class="btn primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-        // Aggiorna lista spese
-        function updateExpensesList() {
-            const container = document.getElementById('expensesList');
-            
-            let filteredExpenses = [...expenses];
-            
-            // Applica filtri
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-            const categoryFilter = document.getElementById('filterCategory').value;
-            
-            if (dateFrom) {
-                filteredExpenses = filteredExpenses.filter(e => e.date >= dateFrom);
-            }
-            if (dateTo) {
-                filteredExpenses = filteredExpenses.filter(e => e.date <= dateTo);
-            }
-            if (categoryFilter) {
-                filteredExpenses = filteredExpenses.filter(e => e.category === categoryFilter);
-            }
-            
-            // Ordina per data (più recenti prima)
-            filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            if (filteredExpenses.length === 0) {
-                container.innerHTML = '<div class="no-data">📭 Nessuna spesa trovata</div>';
-                return;
-            }
-            
-            container.innerHTML = filteredExpenses.map(expense => `
-                <div class="expense-item">
-                    <div class="expense-header">
-                        <span class="expense-amount">€${expense.amount.toFixed(2)}</span>
-                        <span class="expense-date">${formatDate(expense.date)}</span>
-                    </div>
-                    ${expense.category ? `<div class="expense-category">${getCategoryIcon(expense.category)} ${expense.category}</div>` : ''}
-                    ${expense.description ? `<div class="expense-description">${expense.description}</div>` : ''}
-                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">🗑️ Elimina</button>
-                </div>
-            `).join('');
-        }
+  <script src="app.js"></script>
 
-        // Elimina spesa
-        function deleteExpense(id) {
-            if (confirm('Sei sicuro di voler eliminare questa spesa?')) {
-                expenses = expenses.filter(e => e.id !== id);
-                localStorage.setItem('expenses', JSON.stringify(expenses));
-                updateBudgetDisplay();
-                updateExpensesList();
-                updateStats();
-            }
-        }
-
-        // Aggiorna statistiche
-        function updateStats() {
-            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            const monthlyTotal = expenses
-                .filter(e => e.date.startsWith(currentMonth))
-                .reduce((sum, e) => sum + e.amount, 0);
-            
-            const daysInMonth = new Date().getDate();
-            const avgDaily = monthlyTotal / daysInMonth;
-            
-            document.getElementById('totalExpenses').textContent = '€' + total.toFixed(2);
-            document.getElementById('monthlyExpenses').textContent = '€' + monthlyTotal.toFixed(2);
-            document.getElementById('avgDaily').textContent = '€' + avgDaily.toFixed(2);
-            document.getElementById('expenseCount').textContent = expenses.length;
-        }
-
-        // Aggiorna grafico
-        function updateChart() {
-            const canvas = document.getElementById('categoryChart');
-            const ctx = canvas.getContext('2d');
-            
-            // Raggruppa spese per categoria
-            const categoryTotals = {};
-            expenses.forEach(expense => {
-                const cat = expense.category || 'Altro';
-                categoryTotals[cat] = (categoryTotals[cat] || 0) + expense.amount;
-            });
-            
-            const categories = Object.keys(categoryTotals);
-            if (categories.length === 0) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillText('Nessun dato da visualizzare', canvas.width / 2 - 80, canvas.height / 2);
-                return;
-            }
-            
-            // Pulisci canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 20;
-            
-            const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-            let currentAngle = -Math.PI / 2;
-            
-            // Disegna torta
-            categories.forEach(category => {
-                const value = categoryTotals[category];
-                const sliceAngle = (value / total) * 2 * Math.PI;
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-                ctx.closePath();
-                
-                ctx.fillStyle = categoryColors[category] || '#ccc';
-                ctx.fill();
-                
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                
-                currentAngle += sliceAngle;
-            });
-            
-            // Aggiorna leggenda
-            const legendContainer = document.getElementById('categoryLegend');
-            legendContainer.innerHTML = categories.map(category => {
-                const percentage = ((categoryTotals[category] / total) * 100).toFixed(1);
-                return `
-                    <div class="category-legend">
-                        <div class="category-color" style="background-color: ${categoryColors[category]}"></div>
-                        ${category} (${percentage}%)
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Esporta CSV
-        function exportToCSV() {
-            if (expenses.length === 0) {
-                alert('Nessuna spesa da esportare!');
-                return;
-            }
-            
-            const headers = ['Data', 'Importo', 'Categoria', 'Descrizione'];
-            const csvContent = [
-                headers.join(','),
-                ...expenses.map(e => [
-                    e.date,
-                    e.amount,
-                    e.category || '',
-                    (e.description || '').replace(/,/g, ';')
-                ].join(','))
-            ].join('\n');
-            
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `spese_${new Date().toISOString().slice(0, 10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
-        // Pulisci filtri
-        function clearFilters() {
-            document.getElementById('filterDateFrom').value = '';
-            document.getElementById('filterDateTo').value = '';
-            document.getElementById('filterCategory').value = '';
-            updateExpensesList();
-        }
-
-        // Aggiorna budget
-        function updateBudget() {
-            const newBudget = parseFloat(document.getElementById('monthlyBudget').value);
-            if (newBudget > 0) {
-                monthlyBudget = newBudget;
-                localStorage.setItem('monthlyBudget', monthlyBudget.toString());
-                updateBudgetDisplay();
-                alert('💰 Budget aggiornato con successo!');
-            }
-        }
-
-        // Cancella tutti i dati
-        function clearAllData() {
-            if (confirm('⚠️ ATTENZIONE: Questo cancellerà tutte le spese salvate. Continuare?')) {
-                if (confirm('Sei assolutamente sicuro? Questa azione non può essere annullata!')) {
-                    expenses = [];
-                    localStorage.removeItem('expenses');
-                    updateBudgetDisplay();
-                    updateExpensesList();
-                    updateStats();
-                    alert('🗑️ Tutti i dati sono stati cancellati!');
-                }
-            }
-        }
-
-        // Utility functions
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('it-IT', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric' 
-            });
-        }
-
-        function getCategoryIcon(category) {
-            const icons = {
-                'Cibo': '🍕',
-                'Trasporti': '🚗',
-                'Shopping': '🛍️',
-                'Casa': '🏠',
-                'Salute': '⚕️',
-                'Svago': '🎮',
-                'Altro': '📦'
-            };
-            return icons[category] || '📦';
-        }
-
-        // Event listeners per filtri
-        document.getElementById('filterDateFrom').addEventListener('change', updateExpensesList);
-        document.getElementById('filterDateTo').addEventListener('change', updateExpensesList);
-        document.getElementById('filterCategory').addEventListener('change', updateExpensesList);
-
-        // PWA Install prompt
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            showInstallButton();
-        });
-
-        function showInstallButton() {
-            const installButton = document.createElement('button');
-            installButton.innerText = '📱 Installa App';
-            installButton.className = 'btn-secondary';
-            installButton.style.position = 'fixed';
-            installButton.style.bottom = '20px';
-            installButton.style.right = '20px';
-            installButton.style.zIndex = '1000';
-            installButton.style.background = '#667eea';
-            installButton.style.color = 'white';
-            installButton.onclick = installApp;
-            document.body.appendChild(installButton);
-        }
-
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((result) => {
-                    if (result.outcome === 'accepted') {
-                        console.log('App installata');
-                    }
-                    deferredPrompt = null;
-                });
-            }
-        }
-    </script>
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(e => console.log('SW reg failed', e));
+    }
+  </script>
 </body>
 </html>
