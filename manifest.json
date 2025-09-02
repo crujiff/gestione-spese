@@ -1,10 +1,11 @@
 {
   "name": "Gestione Spese",
   "short_name": "Spese",
-  "start_url": "./index.html",
+  "start_url": "/gestione-spese/index.html",
   "display": "standalone",
   "background_color": "#f5f7fb",
   "theme_color": "#1e88e5",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
