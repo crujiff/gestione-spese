@@ -11,7 +11,11 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
 <style>
   :root{
     --bg:#f5f7fb; --card:#ffffff; --accent:#1e88e5; --muted:#6b7280; --red:#d32f2f; --green:#059669;
